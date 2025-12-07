@@ -1,35 +1,30 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPublicEvents } from "@/api/events";
+import { PublicEvent } from "@/types/events";
 
-const events = [
-  {
-    id: 1,
-    title: "Youth Leadership Summit 2024",
-    date: "January 15, 2025",
-    location: "Islamabad",
-    description: "A gathering of young leaders from across Pakistan to discuss national issues and solutions.",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=250&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Education Empowerment Workshop",
-    date: "February 5, 2025",
-    location: "Rawalpindi",
-    description: "Interactive workshop on modern education techniques and career counseling for students.",
-    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=250&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Community Health Camp",
-    date: "February 20, 2025",
-    location: "Rural Punjab",
-    description: "Free medical checkups and health awareness campaign for underserved communities.",
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=250&fit=crop",
-  },
-];
+const coverImage = (event: PublicEvent) =>
+  event.hero_image_url || event.gallery?.[0]?.image_url || "/placeholder.svg";
+
+const getEventStatus = (event: PublicEvent) => {
+  const now = new Date();
+  const start = new Date(event.starts_at);
+  const end = event.ends_at ? new Date(event.ends_at) : null;
+
+  if (start > now) return { label: "Upcoming", className: "bg-blue-600 text-white" };
+  if (end && now > end) return { label: "Completed", className: "bg-slate-700 text-white" };
+  return { label: "Ongoing", className: "bg-emerald-600 text-white" };
+};
 
 export const EventsSection = () => {
+  const { data: events, isLoading, isError } = useQuery({
+    queryKey: ["public-events", "featured"],
+    queryFn: () => fetchPublicEvents({ featuredOnly: true, limit: 6 }),
+  });
+
   return (
     <section className="py-16 lg:py-24 bg-background">
       <div className="container mx-auto px-4">
@@ -43,18 +38,25 @@ export const EventsSection = () => {
           </p>
         </div>
 
+        {isLoading && <p className="text-center text-muted-foreground">Loading highlights...</p>}
+        {isError && <p className="text-center text-destructive">Could not load events.</p>}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
-            <div 
+          {(events ?? []).map((event) => (
+            <Link
               key={event.id}
+              to={`/events/${event.slug}`}
               className="bg-card rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow group"
             >
-              <div className="aspect-video overflow-hidden">
-                <img 
-                  src={event.image} 
+              <div className="aspect-video overflow-hidden relative">
+                <img
+                  src={coverImage(event)}
                   alt={event.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
+                <Badge className={`absolute top-3 right-3 ${getEventStatus(event).className}`}>
+                  {getEventStatus(event).label}
+                </Badge>
               </div>
               <div className="p-6">
                 <h3 className="font-semibold text-lg text-foreground mb-3 line-clamp-2">
@@ -63,16 +65,18 @@ export const EventsSection = () => {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {event.date}
+                    {new Date(event.starts_at).toLocaleDateString()}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {event.location}
-                  </span>
+                  {event.location && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {event.location}
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

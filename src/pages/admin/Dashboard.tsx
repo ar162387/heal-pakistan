@@ -1,5 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, Calendar, FileText, Users, UserPlus, MessageSquareQuote } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchRecentActivity } from "@/api/activity";
+import { formatDistanceToNow } from "date-fns";
 
 const stats = [
   { title: "Total Alumni", value: "156", icon: GraduationCap, change: "+12 this month" },
@@ -10,15 +13,12 @@ const stats = [
   { title: "Membership Applications", value: "34", icon: UserPlus, change: "12 pending" },
 ];
 
-const recentActivity = [
-  { action: "New alumni added", user: "Vaneeza Khan", time: "2 hours ago" },
-  { action: "Event published", user: "Admin", time: "5 hours ago" },
-  { action: "Blog post updated", user: "Content Manager", time: "1 day ago" },
-  { action: "New member application", user: "System", time: "1 day ago" },
-  { action: "Team member updated", user: "Admin", time: "2 days ago" },
-];
-
 const Dashboard = () => {
+  const { data: recentActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ["recent-activity", "dashboard"],
+    queryFn: () => fetchRecentActivity(5),
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -49,17 +49,32 @@ const Dashboard = () => {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">by {activity.user}</p>
+            {activityLoading && <p className="text-sm text-muted-foreground">Loading activity...</p>}
+            {!activityLoading && (!recentActivity || recentActivity.length === 0) && (
+              <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+            )}
+            {!activityLoading && recentActivity && (
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-center justify-between border-b border-border pb-3 last:border-0"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">
+                        {activity.action} on {activity.entity}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        by {activity.actor?.name ?? "System"} ({activity.actor?.role ?? "unknown"})
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

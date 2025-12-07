@@ -1,33 +1,52 @@
-import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const AdminLayout = () => {
-  // For demo purposes, allow switching roles
-  const [userRole, setUserRole] = useState<"super_admin" | "content_manager" | "member">("super_admin");
+  const { role, profile, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+  const userRole = role ?? "member";
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/admin/login");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+        Loading admin workspace...
+      </div>
+    );
+  }
+
+  if (!role) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-semibold">Access Restricted</h2>
+          <p className="text-muted-foreground text-sm">
+            Your account is not provisioned as an admin. Please contact a super admin.
+          </p>
+          <Button onClick={handleLogout} variant="outline" className="mt-2">
+            Back to login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AdminSidebar userRole={userRole} />
+      <AdminSidebar userRole={userRole} onLogout={handleLogout} />
       
       <div className="flex-1 flex flex-col">
         <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
           <h2 className="text-lg font-semibold">Content Management System</h2>
-          
-          {/* Demo role switcher - would be removed in production */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">Demo Role:</span>
-            <Select value={userRole} onValueChange={(value: any) => setUserRole(value)}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
-                <SelectItem value="content_manager">Content Manager</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="text-right">
+            <p className="text-sm font-medium">{profile?.name ?? "Admin User"}</p>
+            <p className="text-xs text-muted-foreground capitalize">{userRole.replace("_", " ")}</p>
           </div>
         </header>
 

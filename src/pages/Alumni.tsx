@@ -1,38 +1,43 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-
-const alumniData = [
-  { name: "Ahmed Khan", university: "NDU Islamabad", batch: "2024", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" },
-  { name: "Sara Ali", university: "IIUI", batch: "2024", image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face" },
-  { name: "Bilal Ahmed", university: "NUML", batch: "2024", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face" },
-  { name: "Fatima Zahra", university: "FJWU", batch: "2023", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face" },
-  { name: "Usman Tariq", university: "QAU", batch: "2023", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" },
-  { name: "Ayesha Malik", university: "Iqra University", batch: "2024", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face" },
-  { name: "Hassan Raza", university: "NDU Islamabad", batch: "2023", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face" },
-  { name: "Zainab Iqbal", university: "IIUI", batch: "2023", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face" },
-  { name: "Ali Hassan", university: "NUML", batch: "2024", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face" },
-  { name: "Sana Fatima", university: "FJWU", batch: "2024", image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&h=150&fit=crop&crop=face" },
-  { name: "Omar Farooq", university: "QAU", batch: "2024", image: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=150&h=150&fit=crop&crop=face" },
-  { name: "Hira Khan", university: "Iqra University", batch: "2023", image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face" },
-];
-
-const universities = ["All Universities", "NDU Islamabad", "IIUI", "NUML", "FJWU", "QAU", "Iqra University"];
-const batches = ["All Batches", "2024", "2023"];
+import { fetchPublicAlumni } from "@/api/alumni";
+import { PublicAlumniProfile } from "@/types/alumni";
 
 const Alumni = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUniversity, setSelectedUniversity] = useState("All Universities");
-  const [selectedBatch, setSelectedBatch] = useState("All Batches");
+  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
 
-  const filteredAlumni = alumniData.filter((alumni) => {
-    const matchesSearch = alumni.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesUniversity = selectedUniversity === "All Universities" || alumni.university === selectedUniversity;
-    const matchesBatch = selectedBatch === "All Batches" || alumni.batch === selectedBatch;
-    return matchesSearch && matchesUniversity && matchesBatch;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["public-alumni", searchTerm, selectedUniversity, selectedBatch],
+    queryFn: () =>
+      fetchPublicAlumni({
+        search: searchTerm,
+        university: selectedUniversity ?? null,
+        batch: selectedBatch ?? null,
+        limit: 200,
+      }),
   });
+
+  const alumni: PublicAlumniProfile[] = data ?? [];
+
+  const universities = useMemo(() => {
+    const values = new Set<string>();
+    alumni.forEach((item) => values.add(item.university));
+    return ["All Universities", ...Array.from(values)];
+  }, [alumni]);
+
+  const batches = useMemo(() => {
+    const values = new Set<string>();
+    alumni.forEach((item) => values.add(item.batch));
+    return ["All Batches", ...Array.from(values)];
+  }, [alumni]);
+
+  const filteredAlumni = alumni;
 
   return (
     <Layout>
@@ -61,7 +66,10 @@ const Alumni = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
+              <Select
+                value={selectedUniversity ?? "All Universities"}
+                onValueChange={(value) => setSelectedUniversity(value === "All Universities" ? null : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by university" />
                 </SelectTrigger>
@@ -71,7 +79,10 @@ const Alumni = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={selectedBatch} onValueChange={setSelectedBatch}>
+              <Select
+                value={selectedBatch ?? "All Batches"}
+                onValueChange={(value) => setSelectedBatch(value === "All Batches" ? null : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by batch" />
                 </SelectTrigger>
@@ -85,21 +96,28 @@ const Alumni = () => {
           </div>
 
           {/* Alumni Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {filteredAlumni.map((alumni, index) => (
-              <div key={index} className="bg-card p-4 rounded-lg shadow-md text-center hover:shadow-lg transition-shadow">
-                <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-4 border-primary/20">
-                  <img src={alumni.image} alt={alumni.name} className="w-full h-full object-cover" />
-                </div>
-                <h3 className="font-medium text-foreground text-sm mb-1">{alumni.name}</h3>
-                <p className="text-xs text-muted-foreground">{alumni.university}</p>
-                <p className="text-xs text-primary">Batch {alumni.batch}</p>
-              </div>
-            ))}
-          </div>
+          {isLoading && <p className="text-center text-muted-foreground py-12">Loading alumni...</p>}
+          {isError && <p className="text-center text-destructive py-12">Failed to load alumni.</p>}
 
-          {filteredAlumni.length === 0 && (
-            <p className="text-center text-muted-foreground py-12">No alumni found matching your criteria.</p>
+          {!isLoading && !isError && (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                {filteredAlumni.map((alumni) => (
+                  <div key={alumni.id} className="bg-card p-4 rounded-lg shadow-md text-center hover:shadow-lg transition-shadow">
+                    <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-4 border-primary/20">
+                      <img src={alumni.profile_photo_url || "/placeholder.svg"} alt={alumni.full_name} className="w-full h-full object-cover" />
+                    </div>
+                    <h3 className="font-medium text-foreground text-sm mb-1">{alumni.full_name}</h3>
+                    <p className="text-xs text-muted-foreground">{alumni.university}</p>
+                    <p className="text-xs text-primary">Batch {alumni.batch}</p>
+                  </div>
+                ))}
+              </div>
+
+              {filteredAlumni.length === 0 && (
+                <p className="text-center text-muted-foreground py-12">No alumni found matching your criteria.</p>
+              )}
+            </>
           )}
         </div>
       </section>

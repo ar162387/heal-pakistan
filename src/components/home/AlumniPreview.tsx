@@ -1,17 +1,21 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { fetchPublicAlumni } from "@/api/alumni";
 
-const alumniPreview = [
-  { name: "Ahmed Khan", university: "NDU Islamabad", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-  { name: "Sara Ali", university: "IIUI", image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face" },
-  { name: "Bilal Ahmed", university: "NUML", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
-  { name: "Fatima Zahra", university: "FJWU", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-  { name: "Usman Tariq", university: "QAU", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-  { name: "Ayesha Malik", university: "Iqra University", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+const fallbackAlumni = [
+  { full_name: "Alumni Member", university: "HEAL Pakistan", profile_photo_url: "/placeholder.svg" },
 ];
 
 export const AlumniPreview = () => {
+  const { data } = useQuery({
+    queryKey: ["public-alumni-preview"],
+    queryFn: () => fetchPublicAlumni({ limit: 6 }),
+  });
+
+  const alumni = data && data.length > 0 ? data.slice(0, 6) : fallbackAlumni;
+
   return (
     <section className="py-16 lg:py-24 bg-accent">
       <div className="container mx-auto px-4">
@@ -27,20 +31,20 @@ export const AlumniPreview = () => {
         </div>
 
         <div className="flex flex-wrap justify-center gap-6 mb-10">
-          {alumniPreview.map((alumni, index) => (
+          {alumni.map((alumniMember, index) => (
             <div 
-              key={index}
+              key={alumniMember.id ?? index}
               className="flex flex-col items-center text-center group"
             >
               <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/20 group-hover:border-primary transition-colors mb-3">
                 <img 
-                  src={alumni.image} 
-                  alt={alumni.name}
+                  src={alumniMember.profile_photo_url || "/placeholder.svg"} 
+                  alt={alumniMember.full_name}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <h4 className="font-medium text-foreground text-sm">{alumni.name}</h4>
-              <p className="text-xs text-muted-foreground">{alumni.university}</p>
+              <h4 className="font-medium text-foreground text-sm">{alumniMember.full_name}</h4>
+              <p className="text-xs text-muted-foreground">{alumniMember.university}</p>
             </div>
           ))}
         </div>
