@@ -38,10 +38,10 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen bg-background">
       <AdminSidebar userRole={userRole} onLogout={handleLogout} />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
           <h2 className="text-lg font-semibold">Content Management System</h2>
           <div className="text-right">
@@ -53,6 +53,22 @@ const AdminLayout = () => {
         <main className="flex-1 p-6 overflow-auto">
           <Outlet context={{ userRole }} />
         </main>
+
+        <footer className="border-t border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 py-4 flex justify-end">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-sm text-primary/80 shadow-sm ring-1 ring-primary/15 transition-all duration-200 hover:bg-primary/15 hover:-translate-y-0.5">
+            <span className="text-[11px] uppercase tracking-[0.18em]">
+              Powered by
+            </span>
+            <a
+              href="https://portfolio-olive-eta-71.vercel.app"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-primary hover:underline underline-offset-4"
+            >
+              Vibe Coderz
+            </a>
+          </div>
+        </footer>
       </div>
     </div>
   );

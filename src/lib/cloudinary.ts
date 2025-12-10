@@ -5,14 +5,17 @@ if (!cloudName || !uploadPreset) {
   throw new Error("Missing Cloudinary env vars: VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET");
 }
 
-export async function uploadImageToCloudinary(file: File): Promise<string> {
+function buildFormData(file: File) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
+  return formData;
+}
 
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+async function uploadToCloudinary(endpoint: string, file: File): Promise<string> {
+  const response = await fetch(endpoint, {
     method: "POST",
-    body: formData,
+    body: buildFormData(file),
   });
 
   if (!response.ok) {
@@ -26,5 +29,14 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
   }
 
   return data.secure_url as string;
+}
+
+export async function uploadImageToCloudinary(file: File): Promise<string> {
+  return uploadToCloudinary(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, file);
+}
+
+// Supports both images and videos by using Cloudinary's auto resource type.
+export async function uploadMediaToCloudinary(file: File): Promise<string> {
+  return uploadToCloudinary(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, file);
 }
 

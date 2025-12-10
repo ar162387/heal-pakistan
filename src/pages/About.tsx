@@ -1,7 +1,18 @@
 import { Layout } from "@/components/layout/Layout";
 import { Heart, Target, Eye } from "lucide-react";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 const About = () => {
+  const { data: settings } = useSiteSettings();
+
+  const missionText =
+    settings?.about_mission ||
+    "At HEAL Pakistan, we inspire humanity and foster healing through our initiative to reach the unreached. We empower the youth with education and awareness, cultivating a compassionate generation dedicated to uplifting communities across our nation.";
+
+  const visionText =
+    settings?.about_vision ||
+    "To create a Pakistan where every community has access to education, healthcare, and opportunities for growth. We envision a nation led by compassionate, educated young leaders committed to positive change.";
+
   return (
     <Layout>
       {/* Hero */}
@@ -26,9 +37,7 @@ const About = () => {
               </div>
               <h2 className="font-serif text-2xl font-bold text-foreground mb-4">Our Mission</h2>
               <p className="text-muted-foreground leading-relaxed">
-                At HEAL Pakistan, we inspire humanity and foster healing through our initiative to 
-                reach the unreached. We empower the youth with education and awareness, cultivating 
-                a compassionate generation dedicated to uplifting communities across our nation.
+                {missionText}
               </p>
             </div>
             <div className="bg-card p-8 rounded-lg shadow-md">
@@ -37,9 +46,7 @@ const About = () => {
               </div>
               <h2 className="font-serif text-2xl font-bold text-foreground mb-4">Our Vision</h2>
               <p className="text-muted-foreground leading-relaxed">
-                To create a Pakistan where every community has access to education, healthcare, 
-                and opportunities for growth. We envision a nation led by compassionate, 
-                educated young leaders committed to positive change.
+                {visionText}
               </p>
             </div>
           </div>

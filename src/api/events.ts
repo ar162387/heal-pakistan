@@ -206,7 +206,8 @@ export async function fetchPublicEvent(identifier: string): Promise<PublicEvent 
     .eq("is_published", true);
 
   if (isUuid) {
-    query = query.or(`id.eq.${identifier},slug.eq.${identifier}`);
+    const escapedIdentifier = identifier.replace(/"/g, '""');
+    query = query.or(`id.eq.${identifier},slug.eq."${escapedIdentifier}"`);
   } else {
     query = query.eq("slug", identifier);
   }

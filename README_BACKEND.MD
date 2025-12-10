@@ -13,7 +13,7 @@ To support the "multi-user" requirement, the system will support distinct access
 #### **2. Core Management Modules**
 The admin panel will include the following CRUD (Create, Read, Update, Delete) modules to control the frontend:
 
-* **Alumni & Intern Database:** A dedicated section to manage the "Internship Alumni Page." [cite_start]Admins must be able to upload profile photos, enter names, assign universities, and tag internship batches to ensure the frontend search functionality works correctly[cite: 25, 45].
+* **Alumni & Intern Database:** A dedicated section to manage the "Internship Alumni Page." [cite_start]Admins must be able to upload profile photos, enter names, assign universities, , tag internship batches and description with contact details ((for admin panel only )to ensure the frontend search functionality works correctly[cite: 25, 45].
 * **Events & Gallery Manager:** A module to create new event pages and manage the "Events Highlights" carousel. [cite_start]This includes a media uploader for high-quality photos and fields for event dates, descriptions, and locations[cite: 80, 81].
 * **Publications & Blog CMS:** A rich-text editor allowing admins to publish full written articles or upload screenshots of media coverage. [cite_start]This section feeds the "Publications Highlights" and the full blog page[cite: 48, 83].
 * [cite_start]**Team & Leadership Management:** An interface to manage the organizational hierarchy, allowing the easy addition of Cabinet Members, Chapter Leads, and Collaborators, complete with photo uploads and designation titles[cite: 24, 9].

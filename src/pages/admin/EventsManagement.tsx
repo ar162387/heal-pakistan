@@ -40,6 +40,16 @@ const emptyForm: EventFormState = {
 
 const allowedRoles = ["super_admin", "content_manager"] as const;
 
+const getEventStatus = (event: Event) => {
+  const now = new Date();
+  const start = new Date(event.starts_at);
+  const end = event.ends_at ? new Date(event.ends_at) : null;
+
+  if (start > now) return { label: "upcoming", className: "bg-blue-600 text-white" };
+  if (end && now > end) return { label: "completed", className: "bg-slate-700 text-white" };
+  return { label: "ongoing", className: "bg-emerald-600 text-white" };
+};
+
 type QueuedImage = {
   id: string;
   file: File;
@@ -526,7 +536,7 @@ const EventsManagement = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredEvents.map((event) => {
-          const isUpcoming = new Date(event.starts_at) > new Date();
+          const status = getEventStatus(event);
           return (
             <Card key={event.id}>
               {event.hero_image_url && (
@@ -541,7 +551,7 @@ const EventsManagement = () => {
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-lg">{event.title}</CardTitle>
-                  <Badge variant={isUpcoming ? "default" : "secondary"}>{isUpcoming ? "upcoming" : "completed"}</Badge>
+                  <Badge className={status.className}>{status.label}</Badge>
                 </div>
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">

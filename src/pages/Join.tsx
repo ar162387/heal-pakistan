@@ -1,11 +1,59 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, HandHeart, GraduationCap } from "lucide-react";
+import { UserPlus, HandHeart, GraduationCap, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { createMembershipApplication } from "@/api/membership";
+import { MembershipType } from "@/types/membership";
+
+type FormState = {
+  full_name: string;
+  email: string;
+  phone: string;
+  city: string;
+  organization: string;
+  join_as: MembershipType;
+  motivation: string;
+};
+
+const emptyForm: FormState = {
+  full_name: "",
+  email: "",
+  phone: "",
+  city: "",
+  organization: "",
+  join_as: "member",
+  motivation: "",
+};
 
 const Join = () => {
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const { toast } = useToast();
+
+  const mutation = useMutation({
+    mutationFn: createMembershipApplication,
+    onSuccess: () => {
+      toast({ title: "Application submitted", description: "We'll review and get back to you soon." });
+      setForm(emptyForm);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: "Submission failed",
+        description: error instanceof Error ? error.message : "Unexpected error. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(form);
+  };
+
   return (
     <Layout>
       <section className="bg-primary py-16 lg:py-24">
@@ -49,50 +97,84 @@ const Join = () => {
           {/* Form */}
           <div className="max-w-2xl mx-auto bg-card p-8 rounded-lg shadow-md">
             <h2 className="font-serif text-2xl font-bold text-foreground text-center mb-8">Application Form</h2>
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Full Name *</label>
-                  <Input placeholder="Enter your full name" />
+                  <Input
+                    placeholder="Enter your full name"
+                    value={form.full_name}
+                    onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Email *</label>
-                  <Input type="email" placeholder="Enter your email" />
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={form.email}
+                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                    required
+                  />
                 </div>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Phone Number *</label>
-                  <Input placeholder="Enter your phone number" />
+                  <Input
+                    placeholder="Enter your phone number"
+                    value={form.phone}
+                    onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">City *</label>
-                  <Input placeholder="Enter your city" />
+                  <Input
+                    placeholder="Enter your city"
+                    value={form.city}
+                    onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
+                    required
+                  />
                 </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">University / Organization</label>
-                <Input placeholder="Enter your university or organization" />
+                <Input
+                  placeholder="Enter your university or organization"
+                  value={form.organization}
+                  onChange={(e) => setForm((prev) => ({ ...prev, organization: e.target.value }))}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">How would you like to join? *</label>
-                <Select>
+                <Select
+                  value={form.join_as}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, join_as: value as MembershipType }))}
+                  required
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select an option" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="member">Become a Member</SelectItem>
                     <SelectItem value="volunteer">Volunteer</SelectItem>
-                    <SelectItem value="internship">Apply for Internship</SelectItem>
                     <SelectItem value="donor">Support as Donor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Why do you want to join HEAL Pakistan?</label>
-                <Textarea placeholder="Tell us about yourself and your motivation..." rows={4} />
+                <Textarea
+                  placeholder="Tell us about yourself and your motivation..."
+                  rows={4}
+                  value={form.motivation}
+                  onChange={(e) => setForm((prev) => ({ ...prev, motivation: e.target.value }))}
+                />
               </div>
-              <Button type="submit" className="w-full" size="lg">
+              <Button type="submit" className="w-full" size="lg" disabled={mutation.isPending}>
+                {mutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Submit Application
               </Button>
             </form>

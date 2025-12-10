@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Heart, BookOpen, Users } from "lucide-react";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 export const AboutPreview = () => {
+  const { data: settings } = useSiteSettings();
+  const introText =
+    settings?.about_intro ||
+    "At HEAL Pakistan, we inspire humanity and foster healing through our initiative to reach the unreached. We empower the youth with education and awareness, cultivating a compassionate generation dedicated to uplifting communities across our nation.";
+
   return (
     <section className="py-16 lg:py-24 bg-background">
       <div className="container mx-auto px-4">
@@ -13,9 +19,7 @@ export const AboutPreview = () => {
               Who We Are
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              At HEAL Pakistan, we inspire humanity and foster healing through our initiative to 
-              reach the unreached. We empower the youth with education and awareness, cultivating 
-              a compassionate generation dedicated to uplifting communities across our nation.
+              {introText}
             </p>
             <p className="text-muted-foreground leading-relaxed mb-8">
               Founded by Habib ur Rehman and co-founded by Vaneeza Khan, HEAL Pakistan works with 

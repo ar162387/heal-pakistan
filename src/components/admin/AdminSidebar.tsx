@@ -6,6 +6,7 @@ import {
   FileText,
   UserCog,
   MessageSquareQuote,
+  MessageCircle,
   UserPlus,
   Settings,
   GraduationCap,
@@ -22,6 +23,7 @@ const menuItems = [
   { title: "Publications", icon: FileText, path: "/admin/publications", roles: ["super_admin", "content_manager"] },
   { title: "Team", icon: UserCog, path: "/admin/team", roles: ["super_admin", "content_manager"] },
   { title: "Testimonials", icon: MessageSquareQuote, path: "/admin/testimonials", roles: ["super_admin", "content_manager"] },
+  { title: "Messages", icon: MessageCircle, path: "/admin/messages", roles: ["super_admin", "content_manager"] },
   { title: "Membership", icon: UserPlus, path: "/admin/membership", roles: ["super_admin"] },
   { title: "Users", icon: Users, path: "/admin/users", roles: ["super_admin"] },
   { title: "Activity", icon: History, path: "/admin/activity", roles: ["super_admin"] },
@@ -38,7 +40,7 @@ const AdminSidebar = ({ userRole, onLogout }: AdminSidebarProps) => {
   const { profile } = useAuth();
 
   return (
-    <aside className="w-64 min-h-screen bg-card border-r border-border flex flex-col">
+    <aside className="w-64 h-screen sticky top-0 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
         <h1 className="text-xl font-bold text-primary">HEAL Pakistan</h1>
         <p className="text-sm text-muted-foreground">Admin Panel</p>

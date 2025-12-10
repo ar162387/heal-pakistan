@@ -1,10 +1,57 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { createMessage } from "@/api/messages";
+import { useSiteSettings } from "@/hooks/use-site-settings";
+
+type ContactFormState = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+};
+
+const emptyForm: ContactFormState = {
+  name: "",
+  email: "",
+  subject: "",
+  message: "",
+};
 
 const Contact = () => {
+  const [form, setForm] = useState<ContactFormState>(emptyForm);
+  const { toast } = useToast();
+  const { data: settings } = useSiteSettings();
+
+  const contactEmail = settings?.contact_email || "contact@healpakistan.org";
+  const contactPhone = settings?.contact_phone || "+92 300 1234567";
+  const contactAddress = settings?.contact_address || "Islamabad, Pakistan";
+
+  const mutation = useMutation({
+    mutationFn: createMessage,
+    onSuccess: () => {
+      toast({ title: "Message sent", description: "We will get back to you soon." });
+      setForm(emptyForm);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: "Failed to send",
+        description: error instanceof Error ? error.message : "Unexpected error, please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(form);
+  };
+
   return (
     <Layout>
       <section className="bg-primary py-16 lg:py-24">
@@ -35,7 +82,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">Email</h3>
-                    <p className="text-muted-foreground">contact@healpakistan.org</p>
+                    <p className="text-muted-foreground">{contactEmail}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -44,7 +91,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">Phone</h3>
-                    <p className="text-muted-foreground">+92 300 1234567</p>
+                    <p className="text-muted-foreground">{contactPhone}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -53,7 +100,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">Address</h3>
-                    <p className="text-muted-foreground">Islamabad, Pakistan</p>
+                    <p className="text-muted-foreground">{contactAddress}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -71,26 +118,49 @@ const Contact = () => {
             {/* Contact Form */}
             <div className="bg-card p-8 rounded-lg shadow-md">
               <h2 className="font-serif text-2xl font-bold text-foreground mb-6">Send a Message</h2>
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-foreground mb-2 block">Name *</label>
-                    <Input placeholder="Your name" />
+                    <Input
+                      placeholder="Your name"
+                      value={form.name}
+                      onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-2 block">Email *</label>
-                    <Input type="email" placeholder="Your email" />
+                    <Input
+                      type="email"
+                      placeholder="Your email"
+                      value={form.email}
+                      onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Subject *</label>
-                  <Input placeholder="What is this regarding?" />
+                  <Input
+                    placeholder="What is this regarding?"
+                    value={form.subject}
+                    onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Message *</label>
-                  <Textarea placeholder="Your message..." rows={5} />
+                  <Textarea
+                    placeholder="Your message..."
+                    rows={5}
+                    value={form.message}
+                    onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
+                    required
+                  />
                 </div>
-                <Button type="submit" className="w-full" size="lg">
+                <Button type="submit" className="w-full" size="lg" disabled={mutation.isPending}>
+                  {mutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Send Message
                 </Button>
               </form>

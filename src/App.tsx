@@ -29,6 +29,7 @@ import PublicationsManagement from "./pages/admin/PublicationsManagement";
 import TeamManagement from "./pages/admin/TeamManagement";
 import TestimonialsManagement from "./pages/admin/TestimonialsManagement";
 import MembershipManagement from "./pages/admin/MembershipManagement";
+import Messages from "./pages/admin/Messages";
 import UsersManagement from "./pages/admin/UsersManagement";
 import Settings from "./pages/admin/Settings";
 import AdminLogin from "./pages/admin/Login";
@@ -77,6 +78,7 @@ const App = () => (
             <Route path="publications" element={<PublicationsManagement />} />
             <Route path="team" element={<TeamManagement />} />
             <Route path="testimonials" element={<TestimonialsManagement />} />
+            <Route path="messages" element={<Messages />} />
             <Route path="membership" element={<MembershipManagement />} />
             <Route
               path="users"

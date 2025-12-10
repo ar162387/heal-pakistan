@@ -6,12 +6,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Pencil, Trash2, Upload, Eye, FileText, Image, ExternalLink, Expand, Minimize } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  Eye,
+  FileText,
+  Image,
+  ExternalLink,
+  Expand,
+  Minimize,
+  Filter,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Publication, PublicationStatus, PublicationType } from "@/types/publications";
-import { createPublication, deletePublication, listPublications, updatePublication, uploadPublicationImage } from "@/api/publications";
+import {
+  createPublication,
+  deletePublication,
+  fetchPublicationFilters,
+  listPublications,
+  updatePublication,
+  uploadPublicationImage,
+} from "@/api/publications";
 import RichTextContent from "@/components/RichTextContent";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -170,6 +189,9 @@ const PublicationsManagement = () => {
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [authorFilter, setAuthorFilter] = useState<string | undefined>();
+  const [typeFilter, setTypeFilter] = useState<PublicationType | "">("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [createForm, setCreateForm] = useState<PublicationForm>(emptyForm);
@@ -181,16 +203,42 @@ const PublicationsManagement = () => {
 
   const isAllowed = role ? allowedRoles.includes(role as typeof allowedRoles[number]) : false;
 
-  const { data: publications, isLoading, isError } = useQuery({
-    queryKey: ["publications", searchTerm],
-    queryFn: () =>
-      listPublications({
-        search: searchTerm || undefined,
-      }),
+  const { data: filterOptions, isLoading: isFiltersLoading } = useQuery<{
+    categories: string[];
+    authors: string[];
+  }>({
+    queryKey: ["publications", "admin", "filter-options"],
+    queryFn: fetchPublicationFilters,
+    enabled: isAllowed,
+  });
+
+  const categories = filterOptions?.categories ?? [];
+  const authors = filterOptions?.authors ?? [];
+
+  const filters = useMemo(
+    () => ({
+      search: searchTerm.trim() || undefined,
+      category: categoryFilter || undefined,
+      author: authorFilter || undefined,
+      type: typeFilter || undefined,
+    }),
+    [authorFilter, categoryFilter, searchTerm, typeFilter],
+  );
+
+  const { data: publications, isLoading, isError, isFetching } = useQuery({
+    queryKey: ["publications", "admin", filters.search, filters.category, filters.author, filters.type],
+    queryFn: () => listPublications(filters),
     enabled: isAllowed,
   });
 
   const filteredPublications = useMemo(() => publications ?? [], [publications]);
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter(undefined);
+    setAuthorFilter(undefined);
+    setTypeFilter("");
+  };
 
   const uploadCoverIfNeeded = async (file: File | null, fallback?: string | null) => {
     if (file) return uploadPublicationImage(file);
@@ -511,15 +559,89 @@ const PublicationsManagement = () => {
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search publications..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Filter className="h-4 w-4" />
+          <span>Search & Filters</span>
+          {isFetching && <span className="text-xs">(Updating results...)</span>}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by title"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <Select
+            value={typeFilter || "all"}
+            onValueChange={(value) => setTypeFilter(value === "all" ? "" : (value as PublicationType))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="article">Articles</SelectItem>
+              <SelectItem value="media">Media</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={categoryFilter ?? "all"}
+            onValueChange={(value) => setCategoryFilter(value === "all" ? undefined : value)}
+            disabled={isFiltersLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={authorFilter ?? "all"}
+            onValueChange={(value) => setAuthorFilter(value === "all" ? undefined : value)}
+            disabled={isFiltersLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All authors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All authors</SelectItem>
+              {authors.map((author) => (
+                <SelectItem key={author} value={author}>
+                  {author}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetFilters}
+            disabled={!searchTerm && !categoryFilter && !authorFilter && !typeFilter}
+          >
+            Clear filters
+          </Button>
+          {filterOptions && (
+            <p className="text-xs text-muted-foreground">
+              {categories.length} categories • {authors.length} authors
+            </p>
+          )}
         </div>
       </div>
 

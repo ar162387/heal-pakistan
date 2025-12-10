@@ -1,26 +1,79 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, Download, Eye, Check, X, UserPlus } from "lucide-react";
+import { Search, Download, Eye, Check, X, UserPlus, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { MembershipApplication, MembershipStatus, MembershipType } from "@/types/membership";
+import { listMembershipApplications, updateMembershipStatus } from "@/api/membership";
 
-const mockApplications = [
-  { id: 1, name: "Ali Hassan", email: "ali@example.com", university: "NDU", type: "member", status: "pending", date: "2024-02-15" },
-  { id: 2, name: "Ayesha Khan", email: "ayesha@example.com", university: "IIUI", type: "volunteer", status: "approved", date: "2024-02-14" },
-  { id: 3, name: "Usman Ahmed", email: "usman@example.com", university: "NUML", type: "member", status: "pending", date: "2024-02-13" },
-  { id: 4, name: "Fatima Ali", email: "fatima@example.com", university: "FJWU", type: "volunteer", status: "rejected", date: "2024-02-12" },
-  { id: 5, name: "Hassan Raza", email: "hassan@example.com", university: "QAU", type: "member", status: "approved", date: "2024-02-11" },
-];
+const statusOptions: (MembershipStatus | "all")[] = ["all", "pending", "approved", "rejected"];
+const typeOptions: (MembershipType | "all")[] = ["all", "member", "volunteer", "donor"];
 
 const MembershipManagement = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const { role } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const getStatusBadge = (status: string) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<(typeof statusOptions)[number]>("all");
+  const [typeFilter, setTypeFilter] = useState<(typeof typeOptions)[number]>("all");
+  const [selectedApplication, setSelectedApplication] = useState<MembershipApplication | null>(null);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["membership-applications"],
+    queryFn: () => listMembershipApplications({}),
+    enabled: !!role,
+  });
+
+  const applications = data ?? [];
+
+  const filteredApplications = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return applications.filter((app) => {
+      if (statusFilter !== "all" && app.status !== statusFilter) return false;
+      if (typeFilter !== "all" && app.join_as !== typeFilter) return false;
+      if (!term) return true;
+      return [app.full_name, app.email, app.phone, app.city, app.organization, app.motivation]
+        .filter(Boolean)
+        .some((value) => (value ?? "").toLowerCase().includes(term));
+    });
+  }, [applications, searchTerm, statusFilter, typeFilter]);
+
+  const counts = useMemo(() => {
+    const totals = { total: applications.length, pending: 0, approved: 0, rejected: 0 };
+    applications.forEach((app) => {
+      totals[app.status] += 1;
+    });
+    return totals;
+  }, [applications]);
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: MembershipStatus }) => updateMembershipStatus(id, status),
+    onSuccess: (_, vars) => {
+      toast({
+        title: `Application ${vars.status === "approved" ? "approved" : "rejected"}`,
+        description: "Status updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["membership-applications"] });
+      setSelectedApplication((prev) => (prev ? { ...prev, status: vars.status } : prev));
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: "Update failed",
+        description: error instanceof Error ? error.message : "Unexpected error",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getStatusBadge = (status: MembershipStatus) => {
     switch (status) {
       case "approved":
         return <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30">Approved</Badge>;
@@ -30,6 +83,30 @@ const MembershipManagement = () => {
         return <Badge variant="secondary">Pending</Badge>;
     }
   };
+
+  const handleStatusChange = (id: string, status: MembershipStatus) => {
+    statusMutation.mutate({ id, status });
+  };
+
+  const formatDate = (value: string) => new Date(value).toLocaleDateString();
+
+  if (!role) {
+    return (
+      <div className="p-6 bg-card border border-border rounded-lg">
+        <h2 className="text-xl font-semibold mb-2">Restricted</h2>
+        <p className="text-muted-foreground text-sm">Only authenticated admins can view membership applications.</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6 bg-card border border-border rounded-lg">
+        <h2 className="text-xl font-semibold mb-2">Error</h2>
+        <p className="text-muted-foreground text-sm">Failed to load applications. Please refresh.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -52,7 +129,7 @@ const MembershipManagement = () => {
                 <UserPlus className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">34</p>
+                <p className="text-2xl font-bold">{counts.total}</p>
                 <p className="text-xs text-muted-foreground">Total Applications</p>
               </div>
             </div>
@@ -65,7 +142,7 @@ const MembershipManagement = () => {
                 <UserPlus className="h-5 w-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">12</p>
+                <p className="text-2xl font-bold">{counts.pending}</p>
                 <p className="text-xs text-muted-foreground">Pending Review</p>
               </div>
             </div>
@@ -78,7 +155,7 @@ const MembershipManagement = () => {
                 <Check className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">18</p>
+                <p className="text-2xl font-bold">{counts.approved}</p>
                 <p className="text-xs text-muted-foreground">Approved</p>
               </div>
             </div>
@@ -91,7 +168,7 @@ const MembershipManagement = () => {
                 <X className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">4</p>
+                <p className="text-2xl font-bold">{counts.rejected}</p>
                 <p className="text-xs text-muted-foreground">Rejected</p>
               </div>
             </div>
@@ -111,25 +188,28 @@ const MembershipManagement = () => {
                 className="pl-10"
               />
             </div>
-            <Select>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as (typeof statusOptions)[number])}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option === "all" ? "All Status" : option.charAt(0).toUpperCase() + option.slice(1)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as (typeof typeOptions)[number])}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="volunteer">Volunteer</SelectItem>
+                {typeOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option === "all" ? "All Types" : option.charAt(0).toUpperCase() + option.slice(1)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -140,7 +220,7 @@ const MembershipManagement = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>University</TableHead>
+                <TableHead>Organization</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
@@ -148,16 +228,34 @@ const MembershipManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockApplications.map((app) => (
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground py-6">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading applications...
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && filteredApplications.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    No applications found.
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading &&
+                filteredApplications.map((app) => (
                 <TableRow key={app.id}>
-                  <TableCell className="font-medium">{app.name}</TableCell>
+                  <TableCell className="font-medium">{app.full_name}</TableCell>
                   <TableCell>{app.email}</TableCell>
-                  <TableCell>{app.university}</TableCell>
+                  <TableCell>{app.organization || "—"}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="capitalize">{app.type}</Badge>
+                    <Badge variant="outline" className="capitalize">{app.join_as}</Badge>
                   </TableCell>
                   <TableCell>{getStatusBadge(app.status)}</TableCell>
-                  <TableCell>{app.date}</TableCell>
+                  <TableCell>{formatDate(app.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <Dialog>
                       <DialogTrigger asChild>
@@ -165,51 +263,99 @@ const MembershipManagement = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden">
                         <DialogHeader>
                           <DialogTitle>Application Details</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm text-muted-foreground">Name</p>
-                              <p className="font-medium">{app.name}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">Email</p>
-                              <p className="font-medium">{app.email}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">University</p>
-                              <p className="font-medium">{app.university}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">Application Type</p>
-                              <p className="font-medium capitalize">{app.type}</p>
-                            </div>
-                          </div>
-                          {app.status === "pending" && (
-                            <div className="flex gap-3 pt-4">
-                              <Button className="flex-1 bg-green-600 hover:bg-green-700">
-                                <Check className="h-4 w-4 mr-2" />
-                                Approve
-                              </Button>
-                              <Button variant="destructive" className="flex-1">
-                                <X className="h-4 w-4 mr-2" />
-                                Reject
-                              </Button>
-                            </div>
+                        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+                          {selectedApplication && (
+                            <>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Name</p>
+                                  <p className="font-medium">{selectedApplication.full_name}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Email</p>
+                                  <p className="font-medium break-all">{selectedApplication.email}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Phone</p>
+                                  <p className="font-medium">{selectedApplication.phone}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">City</p>
+                                  <p className="font-medium">{selectedApplication.city}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Type</p>
+                                  <p className="font-medium capitalize">{selectedApplication.join_as}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Status</p>
+                                  <p className="font-medium">{selectedApplication.status}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Organization</p>
+                                  <p className="font-medium">{selectedApplication.organization || "—"}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Submitted On</p>
+                                  <p className="font-medium">{formatDate(selectedApplication.created_at)}</p>
+                                </div>
+                              </div>
+                              {selectedApplication.motivation && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground mb-1">Motivation</p>
+                                  <p className="text-sm text-foreground whitespace-pre-line">{selectedApplication.motivation}</p>
+                                </div>
+                              )}
+                              {selectedApplication.status === "pending" && (
+                                <div className="flex gap-3 pt-4">
+                                  <Button
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
+                                    onClick={() => handleStatusChange(selectedApplication.id, "approved")}
+                                    disabled={statusMutation.isPending}
+                                  >
+                                    {statusMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    className="flex-1"
+                                    onClick={() => handleStatusChange(selectedApplication.id, "rejected")}
+                                    disabled={statusMutation.isPending}
+                                  >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       </DialogContent>
                     </Dialog>
                     {app.status === "pending" && (
                       <>
-                        <Button variant="ghost" size="icon" className="text-green-600">
-                          <Check className="h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-green-600"
+                          onClick={() => handleStatusChange(app.id, "approved")}
+                          disabled={statusMutation.isPending}
+                        >
+                          {statusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive">
-                          <X className="h-4 w-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => handleStatusChange(app.id, "rejected")}
+                          disabled={statusMutation.isPending}
+                        >
+                          {statusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                         </Button>
                       </>
                     )}
