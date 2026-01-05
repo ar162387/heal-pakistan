@@ -18,25 +18,11 @@ const getInitials = (name: string): string => {
 // Alumni Card Component
 const AlumniCard = ({
   alumniMember,
-  index,
 }: {
   alumniMember: PublicAlumniProfile;
-  index: number;
 }) => {
-  const cardAnimation = useScrollAnimation({
-    threshold: 0.1,
-    delay: index * 50,
-  });
-
   return (
-    <div
-      ref={cardAnimation.ref as React.RefObject<HTMLDivElement>}
-      className={`flex flex-col items-center text-center group min-w-[140px] transition-all duration-700 ${
-        cardAnimation.isVisible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-4"
-      }`}
-    >
+    <div className="flex flex-col items-center text-center group min-w-[140px] flex-shrink-0">
       <div className="mb-3 relative">
         <Avatar className="w-24 h-24 border-4 border-primary/20 group-hover:border-primary transition-all duration-300 group-hover:scale-110">
           {alumniMember.profile_photo_url ? (
@@ -102,20 +88,27 @@ export const AlumniPreview = () => {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="relative mb-10">
+          <div className="relative mb-10 overflow-hidden">
             {/* Fade gradient on left */}
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-accent to-transparent z-10 pointer-events-none" />
             {/* Fade gradient on right */}
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-accent to-transparent z-10 pointer-events-none" />
             
-            {/* Horizontal scrolling container */}
-            <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4">
-              <div className="flex gap-6 min-w-max">
-                {alumni.map((alumniMember, index) => (
+            {/* Auto-scrolling container */}
+            <div className="overflow-hidden pb-4">
+              <div className="flex gap-6 animate-scroll-left">
+                {/* First set of alumni */}
+                {alumni.map((alumniMember) => (
                   <AlumniCard
-                    key={alumniMember.id}
+                    key={`first-${alumniMember.id}`}
                     alumniMember={alumniMember}
-                    index={index}
+                  />
+                ))}
+                {/* Duplicate set for seamless loop */}
+                {alumni.map((alumniMember) => (
+                  <AlumniCard
+                    key={`second-${alumniMember.id}`}
+                    alumniMember={alumniMember}
                   />
                 ))}
               </div>
