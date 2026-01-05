@@ -1,16 +1,75 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { fetchPublicAlumni } from "@/api/alumni";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
+import { PublicAlumniProfile } from "@/types/alumni";
+
+// Helper function to get initials from a name
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+// Alumni Card Component
+const AlumniCard = ({
+  alumniMember,
+  index,
+}: {
+  alumniMember: PublicAlumniProfile;
+  index: number;
+}) => {
+  const cardAnimation = useScrollAnimation({
+    threshold: 0.1,
+    delay: index * 50,
+  });
+
+  return (
+    <div
+      ref={cardAnimation.ref as React.RefObject<HTMLDivElement>}
+      className={`flex flex-col items-center text-center group min-w-[140px] transition-all duration-700 ${
+        cardAnimation.isVisible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-4"
+      }`}
+    >
+      <div className="mb-3 relative">
+        <Avatar className="w-24 h-24 border-4 border-primary/20 group-hover:border-primary transition-all duration-300 group-hover:scale-110">
+          {alumniMember.profile_photo_url ? (
+            <AvatarImage
+              src={alumniMember.profile_photo_url}
+              alt={alumniMember.full_name}
+              className="object-cover"
+            />
+          ) : null}
+          <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+            {getInitials(alumniMember.full_name)}
+          </AvatarFallback>
+        </Avatar>
+      </div>
+      <h4 className="font-medium text-foreground text-sm mb-1 group-hover:text-primary transition-colors">
+        {alumniMember.full_name}
+      </h4>
+      <p className="text-xs text-muted-foreground line-clamp-2">
+        {alumniMember.university}
+      </p>
+    </div>
+  );
+};
 
 export const AlumniPreview = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["public-alumni-preview"],
-    queryFn: () => fetchPublicAlumni({ limit: 6 }),
+    queryFn: () => fetchPublicAlumni({ limit: 20 }),
   });
 
-  const alumni = data && data.length > 0 ? data.slice(0, 6) : [];
+  const alumni = data && data.length > 0 ? data : [];
+  const headerAnimation = useScrollAnimation({ threshold: 0.2 });
+  const buttonAnimation = useScrollAnimation({ threshold: 0.2 });
 
   // Hide section if no alumni data after loading
   if (!isLoading && alumni.length === 0) {
@@ -20,7 +79,14 @@ export const AlumniPreview = () => {
   return (
     <section className="py-16 lg:py-24 bg-accent">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div
+          ref={headerAnimation.ref as React.RefObject<HTMLDivElement>}
+          className={`text-center mb-12 transition-all duration-700 ${
+            headerAnimation.isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-4"
+          }`}
+        >
           <p className="text-primary font-medium mb-2">Our Community</p>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
             Internship Alumni
@@ -36,29 +102,35 @@ export const AlumniPreview = () => {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-6 mb-10">
-            {alumni.map((alumniMember) => (
-              <div 
-                key={alumniMember.id}
-                className="flex flex-col items-center text-center group"
-              >
-                {alumniMember.profile_photo_url && (
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/20 group-hover:border-primary transition-colors mb-3">
-                    <img 
-                      src={alumniMember.profile_photo_url} 
-                      alt={alumniMember.full_name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <h4 className="font-medium text-foreground text-sm">{alumniMember.full_name}</h4>
-                <p className="text-xs text-muted-foreground">{alumniMember.university}</p>
+          <div className="relative mb-10">
+            {/* Fade gradient on left */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-accent to-transparent z-10 pointer-events-none" />
+            {/* Fade gradient on right */}
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-accent to-transparent z-10 pointer-events-none" />
+            
+            {/* Horizontal scrolling container */}
+            <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4">
+              <div className="flex gap-6 min-w-max">
+                {alumni.map((alumniMember, index) => (
+                  <AlumniCard
+                    key={alumniMember.id}
+                    alumniMember={alumniMember}
+                    index={index}
+                  />
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         )}
 
-        <div className="text-center">
+        <div
+          ref={buttonAnimation.ref as React.RefObject<HTMLDivElement>}
+          className={`text-center transition-all duration-700 ${
+            buttonAnimation.isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-4"
+          }`}
+        >
           <Button asChild className="gap-2">
             <Link to="/alumni">
               See All Alumni

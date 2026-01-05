@@ -5,6 +5,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useQuery } from "@tanstack/react-query";
 import { listHeroSlides } from "@/api/hero";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 export const HeroSection = () => {
   const { data: settings, isLoading: settingsLoading } = useSiteSettings();
@@ -20,6 +21,7 @@ export const HeroSection = () => {
 
   const mediaSlides = slides && slides.length > 0 ? slides : null;
   const [active, setActive] = useState(0);
+  const heroContentAnimation = useScrollAnimation({ threshold: 0.2 });
 
   const goToNextSlide = useCallback(() => {
     if (!mediaSlides || mediaSlides.length <= 1) return;
@@ -89,8 +91,15 @@ export const HeroSection = () => {
       {renderBackground()}
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-2xl">
-          <p className="text-primary font-medium mb-4 animate-fade-in">Welcome to</p>
+        <div
+          ref={heroContentAnimation.ref as React.RefObject<HTMLDivElement>}
+          className={`max-w-2xl transition-all duration-1000 ${
+            heroContentAnimation.isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          <p className="text-primary font-medium mb-4">Welcome to</p>
           <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-secondary-foreground mb-4">
             {heroTitle}
           </h1>
