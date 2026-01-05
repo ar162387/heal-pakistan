@@ -1,14 +1,6 @@
 import { GraduationCap } from "lucide-react";
 
-const chapters = [
-  "National Defence University (NDU), Islamabad",
-  "International Islamic University Islamabad (IIUI)",
-  "National University of Modern Languages (NUML), Islamabad",
-  "Iqra University",
-  "Fatima Jinnah Women University (FJWU), Rawalpindi",
-  "Quaid-i-Azam University (QAU), Islamabad",
-];
-
+// TODO: Load chapters from backend API when available
 export const ChaptersSection = () => {
   return (
     <section className="py-16 lg:py-24 bg-primary text-primary-foreground">
@@ -24,23 +16,11 @@ export const ChaptersSection = () => {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {chapters.map((chapter, index) => (
-            <div 
-              key={index}
-              className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg p-5 flex items-center gap-4 hover:bg-primary-foreground/20 transition-colors"
-            >
-              <div className="w-12 h-12 bg-primary-foreground/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <GraduationCap className="h-6 w-6" />
-              </div>
-              <p className="font-medium text-sm">{chapter}</p>
-            </div>
-          ))}
+        <div className="text-center">
+          <p className="text-primary-foreground/90 text-lg">
+            Chapters coming soon!
+          </p>
         </div>
-
-        <p className="text-center text-primary-foreground/70 text-sm mt-8">
-          More chapters announcing soon!
-        </p>
       </div>
     </section>
   );

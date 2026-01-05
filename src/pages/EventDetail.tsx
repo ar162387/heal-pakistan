@@ -15,7 +15,7 @@ const EventDetail = () => {
     enabled: Boolean(eventId),
   });
 
-  const coverImage = event?.hero_image_url || event?.gallery?.[0]?.image_url || "/placeholder.svg";
+  const coverImage = event?.hero_image_url || event?.gallery?.[0]?.image_url || null;
 
   return (
     <Layout>
@@ -46,11 +46,13 @@ const EventDetail = () => {
 
           {event && (
             <>
-              <div className="rounded-lg overflow-hidden shadow-md">
-                <div className="aspect-video w-full">
-                  <img src={coverImage} alt={event.title} className="w-full h-full object-cover" />
+              {coverImage && (
+                <div className="rounded-lg overflow-hidden shadow-md">
+                  <div className="aspect-video w-full">
+                    <img src={coverImage} alt={event.title} className="w-full h-full object-cover" />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <Badge variant={new Date(event.starts_at) >= new Date() ? "default" : "secondary"}>

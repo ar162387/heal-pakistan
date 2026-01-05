@@ -1,20 +1,21 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { fetchPublicAlumni } from "@/api/alumni";
 
-const fallbackAlumni = [
-  { full_name: "Alumni Member", university: "HEAL Pakistan", profile_photo_url: "/placeholder.svg" },
-];
-
 export const AlumniPreview = () => {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["public-alumni-preview"],
     queryFn: () => fetchPublicAlumni({ limit: 6 }),
   });
 
-  const alumni = data && data.length > 0 ? data.slice(0, 6) : fallbackAlumni;
+  const alumni = data && data.length > 0 ? data.slice(0, 6) : [];
+
+  // Hide section if no alumni data after loading
+  if (!isLoading && alumni.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-16 lg:py-24 bg-accent">
@@ -30,24 +31,32 @@ export const AlumniPreview = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 mb-10">
-          {alumni.map((alumniMember, index) => (
-            <div 
-              key={alumniMember.id ?? index}
-              className="flex flex-col items-center text-center group"
-            >
-              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/20 group-hover:border-primary transition-colors mb-3">
-                <img 
-                  src={alumniMember.profile_photo_url || "/placeholder.svg"} 
-                  alt={alumniMember.full_name}
-                  className="w-full h-full object-cover"
-                />
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-6 mb-10">
+            {alumni.map((alumniMember) => (
+              <div 
+                key={alumniMember.id}
+                className="flex flex-col items-center text-center group"
+              >
+                {alumniMember.profile_photo_url && (
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/20 group-hover:border-primary transition-colors mb-3">
+                    <img 
+                      src={alumniMember.profile_photo_url} 
+                      alt={alumniMember.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <h4 className="font-medium text-foreground text-sm">{alumniMember.full_name}</h4>
+                <p className="text-xs text-muted-foreground">{alumniMember.university}</p>
               </div>
-              <h4 className="font-medium text-foreground text-sm">{alumniMember.full_name}</h4>
-              <p className="text-xs text-muted-foreground">{alumniMember.university}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         <div className="text-center">
           <Button asChild className="gap-2">

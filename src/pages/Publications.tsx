@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const coverImage = (publication: PublicPublication) =>
-  publication.cover_image_url || "/placeholder.svg?height=400&width=600";
+  publication.cover_image_url || null;
 
 const typeLabel: Record<PublicPublication["type"], string> = {
   article: "Article",
@@ -172,18 +172,22 @@ const Publications = () => {
             <p className="text-muted-foreground">No publications yet. Check back soon.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-8">
-              {publications.map((pub) => (
-                <article
-                  key={pub.id}
-                  className="bg-card rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow group"
-                >
-                  <div className="aspect-video overflow-hidden">
-                    <img
-                      src={coverImage(pub)}
-                      alt={pub.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
+              {publications.map((pub) => {
+                const imageUrl = coverImage(pub);
+                return (
+                  <article
+                    key={pub.id}
+                    className="bg-card rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow group"
+                  >
+                    {imageUrl && (
+                      <div className="aspect-video overflow-hidden">
+                        <img
+                          src={imageUrl}
+                          alt={pub.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
                   <div className="p-6">
                     <div className="flex flex-wrap gap-2 mb-3">
                       <Badge variant="outline" className="text-xs">
@@ -228,7 +232,8 @@ const Publications = () => {
                     </div>
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { PublicEvent } from "@/types/events";
 
 const coverImage = (event: PublicEvent) =>
-  event.hero_image_url || event.gallery?.[0]?.image_url || "/placeholder.svg";
+  event.hero_image_url || event.gallery?.[0]?.image_url || null;
 
 const getEventStatus = (event: PublicEvent) => {
   const now = new Date();
@@ -63,16 +63,20 @@ const Events = () => {
             <p className="text-muted-foreground">No upcoming events right now. Check back soon!</p>
           ) : (
             <div className="space-y-8">
-              {upcoming.map((event) => (
-                <div key={event.id} className="bg-card rounded-lg overflow-hidden shadow-md flex flex-col lg:flex-row">
-                  <Link to={`/events/${event.slug}`} className="lg:w-1/3">
-                    <div className="aspect-video w-full overflow-hidden relative">
-                      <img src={coverImage(event)} alt={event.title} className="w-full h-full object-cover" />
-                      <Badge className={`absolute top-3 right-3 ${getEventStatus(event).className}`}>
-                        {getEventStatus(event).label}
-                      </Badge>
-                    </div>
-                  </Link>
+              {upcoming.map((event) => {
+                const imageUrl = coverImage(event);
+                return (
+                  <div key={event.id} className="bg-card rounded-lg overflow-hidden shadow-md flex flex-col lg:flex-row">
+                    {imageUrl && (
+                      <Link to={`/events/${event.slug}`} className="lg:w-1/3">
+                        <div className="aspect-video w-full overflow-hidden relative">
+                          <img src={imageUrl} alt={event.title} className="w-full h-full object-cover" />
+                          <Badge className={`absolute top-3 right-3 ${getEventStatus(event).className}`}>
+                            {getEventStatus(event).label}
+                          </Badge>
+                        </div>
+                      </Link>
+                    )}
                   <div className="lg:w-2/3 p-6 lg:p-8">
                     <h3 className="font-serif text-2xl font-bold text-foreground mb-3">{event.title}</h3>
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
@@ -97,7 +101,8 @@ const Events = () => {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -110,14 +115,18 @@ const Events = () => {
             <p className="text-muted-foreground">No past events to show yet.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
-            {past.map((event) => (
-              <Link key={event.id} to={`/events/${event.slug}`} className="bg-card rounded-lg overflow-hidden shadow-md">
-                <div className="aspect-video w-full overflow-hidden relative">
-                  <img src={coverImage(event)} alt={event.title} className="w-full h-full object-cover" />
-                  <Badge className={`absolute top-3 right-3 ${getEventStatus(event).className}`}>
-                    {getEventStatus(event).label}
-                  </Badge>
-                </div>
+            {past.map((event) => {
+              const imageUrl = coverImage(event);
+              return (
+                <Link key={event.id} to={`/events/${event.slug}`} className="bg-card rounded-lg overflow-hidden shadow-md">
+                  {imageUrl && (
+                    <div className="aspect-video w-full overflow-hidden relative">
+                      <img src={imageUrl} alt={event.title} className="w-full h-full object-cover" />
+                      <Badge className={`absolute top-3 right-3 ${getEventStatus(event).className}`}>
+                        {getEventStatus(event).label}
+                      </Badge>
+                    </div>
+                  )}
                 <div className="p-6">
                   <p className="text-sm text-primary font-medium mb-2">
                     {new Date(event.starts_at).toLocaleDateString()}
@@ -126,7 +135,8 @@ const Events = () => {
                   <p className="text-sm text-muted-foreground line-clamp-3">{event.description}</p>
                 </div>
               </Link>
-            ))}
+              );
+            })}
             </div>
           )}
         </div>

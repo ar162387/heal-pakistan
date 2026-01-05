@@ -347,13 +347,14 @@ const PublicationsManagement = () => {
   };
 
   const renderCard = (pub: Publication) => {
-    const cover = pub.cover_image_url || "/placeholder.svg";
     return (
       <Card key={pub.id}>
         <CardContent className="p-0">
-          <div className="aspect-video overflow-hidden">
-            <img src={cover} alt={pub.title} className="w-full h-full object-cover" />
-          </div>
+          {pub.cover_image_url && (
+            <div className="aspect-video overflow-hidden">
+              <img src={pub.cover_image_url} alt={pub.title} className="w-full h-full object-cover" />
+            </div>
+          )}
           <div className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-wrap gap-2">

@@ -19,8 +19,6 @@ const Testimonials = () => {
     return { supporters: supportersList, interns: internsList };
   }, [testimonials]);
 
-  const placeholder = "/placeholder.svg";
-
   return (
     <Layout>
       <section className="bg-primary py-16 lg:py-24">
@@ -48,11 +46,13 @@ const Testimonials = () => {
                 <div key={testimonial.id} className="bg-card p-8 rounded-lg shadow-md relative">
                   <Quote className="absolute top-6 right-6 h-10 w-10 text-primary/20" />
                   <div className="flex items-center gap-4 mb-6">
-                    <img
-                      src={testimonial.photo_url || placeholder}
-                      alt={testimonial.name}
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
+                    {testimonial.photo_url && (
+                      <img
+                        src={testimonial.photo_url}
+                        alt={testimonial.name}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    )}
                     <div>
                       <h3 className="font-semibold text-foreground">{testimonial.name}</h3>
                       <p className="text-sm text-muted-foreground">
@@ -84,11 +84,13 @@ const Testimonials = () => {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {interns.map((testimonial) => (
                 <div key={testimonial.id} className="bg-card p-6 rounded-lg shadow-md">
-                  <img
-                    src={testimonial.photo_url || placeholder}
-                    alt={testimonial.name}
-                    className="w-16 h-16 rounded-full object-cover mx-auto mb-4"
-                  />
+                  {testimonial.photo_url && (
+                    <img
+                      src={testimonial.photo_url}
+                      alt={testimonial.name}
+                      className="w-16 h-16 rounded-full object-cover mx-auto mb-4"
+                    />
+                  )}
                   <p className="text-sm text-muted-foreground italic text-center mb-4">"{testimonial.quote}"</p>
                   <div className="text-center">
                     <h3 className="font-semibold text-foreground text-sm">{testimonial.name}</h3>

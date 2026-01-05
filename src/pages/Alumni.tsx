@@ -104,9 +104,11 @@ const Alumni = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                 {filteredAlumni.map((alumni) => (
                   <div key={alumni.id} className="bg-card p-4 rounded-lg shadow-md text-center hover:shadow-lg transition-shadow">
-                    <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-4 border-primary/20">
-                      <img src={alumni.profile_photo_url || "/placeholder.svg"} alt={alumni.full_name} className="w-full h-full object-cover" />
-                    </div>
+                    {alumni.profile_photo_url && (
+                      <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-4 border-primary/20">
+                        <img src={alumni.profile_photo_url} alt={alumni.full_name} className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     <h3 className="font-medium text-foreground text-sm mb-1">{alumni.full_name}</h3>
                     <p className="text-xs text-muted-foreground">{alumni.university}</p>
                     <p className="text-xs text-primary">Batch {alumni.batch}</p>

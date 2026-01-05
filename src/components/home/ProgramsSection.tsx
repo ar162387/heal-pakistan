@@ -7,6 +7,11 @@ export const ProgramsSection = () => {
   const { data: programs, isLoading } = usePublicPrograms(4);
   const items = programs ?? [];
 
+  // Hide section if no programs after loading
+  if (!isLoading && items.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-16 lg:py-24 bg-accent">
       <div className="container mx-auto px-4">
@@ -25,28 +30,20 @@ export const ProgramsSection = () => {
             </div>
           )}
 
-          {!isLoading && items.length === 0 && (
-            <div className="sm:col-span-2 lg:col-span-4 text-center text-sm text-muted-foreground">
-              Programs will appear here once added in the admin panel.
-            </div>
-          )}
-
           {items.map((program) => (
             <div key={program.id} className="bg-card rounded-lg shadow-md overflow-hidden flex flex-col">
-              <div className="aspect-[4/3] bg-muted">
-                {program.image_url ? (
+              {program.image_url && (
+                <div className="aspect-[4/3] bg-muted">
                   <img src={program.image_url} alt={program.title} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
-                    Image coming soon
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
               <div className="p-5 flex flex-col gap-3 flex-1">
                 <h3 className="font-semibold text-lg text-foreground">{program.title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-4">
-                  {program.summary?.trim() || "More details will be added soon."}
-                </p>
+                {program.summary?.trim() && (
+                  <p className="text-sm text-muted-foreground line-clamp-4">
+                    {program.summary.trim()}
+                  </p>
+                )}
               </div>
             </div>
           ))}

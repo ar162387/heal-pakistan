@@ -1,73 +1,89 @@
-# Welcome to your Lovable project
+# HEAL Pakistan Portal
 
-## Project info
+Official website for HEAL Pakistan - a humanitarian organization dedicated to reaching the unreached and empowering communities across Pakistan.
 
-**URL**: https://lovable.dev/projects/61bc7956-fe2a-426d-88f0-7abcab297681
+## About
 
-## How can I edit this code?
+HEAL Pakistan inspires humanity and fosters healing through initiatives to reach the unreached. We empower youth with education and awareness, cultivating a compassionate generation dedicated to uplifting communities across Pakistan.
 
-There are several ways of editing your application.
+Founded by Habib ur Rehman and co-founded by Vaneeza Khan, HEAL Pakistan works with university chapters across Pakistan to create meaningful impact through humanitarian work, education empowerment, awareness campaigns, and leadership development.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/61bc7956-fe2a-426d-88f0-7abcab297681) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## Technologies
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Vite** - Build tool and dev server
+- **TypeScript** - Type-safe JavaScript
+- **React** - UI library
+- **React Router** - Client-side routing
+- **shadcn-ui** - UI component library
+- **Tailwind CSS** - Utility-first CSS framework
+- **Supabase** - Backend and database
+- **TanStack Query** - Data fetching and caching
 
-## How can I deploy this project?
+## Getting Started
 
-Simply open [Lovable](https://lovable.dev/projects/61bc7956-fe2a-426d-88f0-7abcab297681) and click on Share -> Publish.
+### Prerequisites
 
-## Can I connect a custom domain to my Lovable project?
+- Node.js (v18 or higher recommended)
+- npm or yarn package manager
 
-Yes, you can!
+### Installation
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Clone the repository:
+```sh
+git clone https://github.com/ar162387/heal-pakistan.git
+cd heal-pakistan-portal
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+2. Install dependencies:
+```sh
+npm install
+```
+
+3. Set up environment variables:
+   - Copy `.env.example` to `.env` (if available)
+   - Add your Supabase credentials
+
+4. Start the development server:
+```sh
+npm run dev
+```
+
+5. Open [http://localhost:5173](http://localhost:5173) in your browser
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## Project Structure
+
+```
+src/
+├── api/           # API client functions
+├── components/    # React components
+│   ├── admin/    # Admin panel components
+│   ├── home/     # Homepage sections
+│   ├── layout/   # Layout components
+│   └── ui/       # Reusable UI components
+├── context/      # React context providers
+├── hooks/        # Custom React hooks
+├── lib/          # Utility functions
+├── pages/        # Page components
+└── types/        # TypeScript type definitions
+```
+
+## Deployment
+
+The project is deployed on Vercel. The `vercel.json` configuration file handles SPA routing.
+
+## Contributing
+
+This is an organization website. For contributions, please contact the project maintainers.
+
+## License
+
+Copyright © HEAL Pakistan. All rights reserved.

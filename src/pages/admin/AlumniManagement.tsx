@@ -376,11 +376,17 @@ const AlumniManagement = () => {
                 {alumni.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <img
-                        src={item.profile_photo_url || "/placeholder.svg"}
-                        alt={item.full_name}
-                        className="w-10 h-10 rounded-full object-cover border border-border"
-                      />
+                      {item.profile_photo_url ? (
+                        <img
+                          src={item.profile_photo_url}
+                          alt={item.full_name}
+                          className="w-10 h-10 rounded-full object-cover border border-border"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-muted border border-border flex items-center justify-center text-xs text-muted-foreground">
+                          No photo
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="font-medium">
                       <div className="flex flex-col">

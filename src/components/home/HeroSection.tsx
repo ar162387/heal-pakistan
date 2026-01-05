@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useQuery } from "@tanstack/react-query";
 import { listHeroSlides } from "@/api/hero";
 
 export const HeroSection = () => {
-  const { data: settings } = useSiteSettings();
-  const { data: slides } = useQuery({ queryKey: ["hero-slides"], queryFn: listHeroSlides });
+  const { data: settings, isLoading: settingsLoading } = useSiteSettings();
+  const { data: slides, isLoading: slidesLoading } = useQuery({ queryKey: ["hero-slides"], queryFn: listHeroSlides });
+
+  const isLoading = settingsLoading || slidesLoading;
 
   const heroTitle = settings?.hero_title || "HEAL Pakistan";
   const heroSubtitle = settings?.hero_subtitle || "Reach the Unreached";
@@ -42,12 +43,7 @@ export const HeroSection = () => {
   const renderBackground = () => {
     if (!currentMedia) {
       return (
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroBg})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/60" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/60" />
       );
     }
 
@@ -76,6 +72,17 @@ export const HeroSection = () => {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <section className="relative min-h-[600px] lg:min-h-[700px] flex items-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/60" />
+        <div className="container mx-auto px-4 relative z-10 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-secondary-foreground" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative min-h-[600px] lg:min-h-[700px] flex items-center overflow-hidden">
